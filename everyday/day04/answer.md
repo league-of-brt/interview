@@ -101,3 +101,6 @@ y: |x-------|xxxxxxxx|xxxx----|
 
 ### 延申：
 * mysql、pg等数据库建表时，长度使用2的n次方，例如varchar(30) 改为 varchar(32)
+
+### 相关文章连接：
+https://docs.hacknode.org/gopl-zh/ch13/ch13-01.html
