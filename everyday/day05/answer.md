@@ -105,3 +105,53 @@ func main() {
    fmt.Println(data)
 }
 ```
+
+
+
+### 如果k确定，可以每次push都只记录前k位
+```golang
+func TestTopK(t *testing.T) {
+	data := []int{1, 8, 30, 2, 2, 3, 10, 0, 1, 5, 6, 15, 20, 1, 2}
+	top := NewTopKHeap(5)
+	for _, n := range data {
+		top.Push(n)
+	}
+	fmt.Println(top.TopK())
+}
+
+type TopKHeap struct {
+	k    int
+	data []int
+}
+
+func NewTopKHeap(k int) *TopKHeap {
+	return &TopKHeap{
+		k:    k,
+		data: make([]int, 0, k),
+	}
+}
+
+func (h *TopKHeap) Push(item int) {
+	l := len(h.data)
+	if l > 0 && item <= h.data[l-1] {
+		return
+	}
+	var cur = l
+	if l < h.k {
+		h.data = append(h.data, item)
+	} else {
+		h.data[l-1] = item
+		cur = l - 1
+	}
+	var pre = cur - 1
+	for pre >= 0 && h.data[cur] > h.data[pre] {
+		h.data[cur], h.data[pre] = h.data[pre], h.data[cur]
+		cur--
+		pre--
+	}
+}
+
+func (h *TopKHeap) TopK() []int {
+	return h.data
+}
+```
