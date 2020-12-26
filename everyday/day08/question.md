@@ -1,3 +1,1 @@
-# mysql innodb 隔离级别
-
-## 1 字典树的概念
+# mysql innodb 事务的隔离级别
