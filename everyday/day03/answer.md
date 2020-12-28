@@ -78,7 +78,7 @@ latch称为闩锁，要求锁定时间非常短，其目的是用来保证并发
 ## 2、讲清楚一条insert、select语句的锁使用情况
 前提：事务隔离级别为可重复读（其他隔离级别暂不探讨）  
 看到这里其实又需要补习一波事务隔离级别、索引原理、快照读/当前读  
-快照读（不加锁,Serializable隔离级别加锁）：单纯的select 
+快照读（不加锁,Serializable隔离级别加锁）：单纯的select   
 当前读（加锁）：update、delete、select for update
 
 ```
@@ -95,7 +95,7 @@ id不为主键且无索引，故触发全表扫描，需要表foo意向排他锁
 
 ## 3、常见死锁场景或sql，如何避免
 这个问题要分析清楚，需要了解锁的算法  
-理论上并发insert就可能造成死锁
+理论上并发insert就可能造成死锁  
 TODO 待完善
 ```
 insert into foo(id,name) value(1,'jack') on duplicate key update name=values(name)
