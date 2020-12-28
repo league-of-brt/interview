@@ -1,5 +1,5 @@
 # MySQL锁机制探讨
-前提： MySQL8.0 InnoDB
+前提： MySQL8.0 InnoDB  
 参考书籍：MySQL技术内幕InnoDB存储引擎
 
 ## 1、锁机制、锁粒度
