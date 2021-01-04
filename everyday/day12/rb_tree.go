@@ -19,21 +19,20 @@ func (t *RbNode) leftRotate(rbt *RbTree) {
 	if t.Right == nil {
 		return
 	}
-	p := t.Parent
 	y := t.Right
-	t.Right = y.Left
-	t.Parent = y
-	y.Parent = p
-	y.Left = t
-	if p != nil {
-		if p.Left != nil && p.Left.Value.GetID() == t.Value.GetID() {
-			p.Left = y
+	if t.Parent != nil {
+		if t.Parent.Left != nil && t.Parent.Left.Value.GetID() == t.Value.GetID() {
+			t.Parent.Left = y
 		} else {
-			p.Right = y
+			t.Parent.Right = y
 		}
 	} else {
 		rbt.Root = y
 	}
+	y.Parent = t.Parent
+	t.Parent = y
+	t.Right = y.Left
+	y.Left = t
 	return
 }
 
@@ -41,21 +40,20 @@ func (t *RbNode) rightRotate(rbt *RbTree) {
 	if t.Left == nil {
 		return
 	}
-	p := t.Parent
 	y := t.Left
-	t.Left = y.Right
-	t.Parent = y
-	y.Parent = p
-	y.Right = t
-	if p != nil {
-		if p.Left != nil && p.Left.Value.GetID() == t.Value.GetID() {
-			p.Left = y
+	if t.Parent != nil {
+		if t.Parent.Left != nil && t.Parent.Left.Value.GetID() == t.Value.GetID() {
+			t.Parent.Left = y
 		} else {
-			p.Right = y
+			t.Parent.Right = y
 		}
 	} else {
 		rbt.Root = y
 	}
+	y.Parent = t.Parent
+	t.Parent = y
+	t.Left = y.Right
+	y.Right = t
 	return
 }
 
