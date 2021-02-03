@@ -1,5 +1,7 @@
 package rbtree
 
+import "fmt"
+
 type RbValue interface {
 	GetID() int
 }
@@ -15,52 +17,57 @@ type RbNode struct {
 	Value               RbValue
 }
 
-func (t *RbNode) leftRotate(rbt *RbTree) {
-	if t.Right == nil {
+func (t *RbTree) leftRotate(x *RbNode) {
+	if x.Right == nil {
 		return
 	}
-	y := t.Right
-	if t.Parent != nil {
-		if t.Parent.Left != nil && t.Parent.Left.Value.GetID() == t.Value.GetID() {
-			t.Parent.Left = y
+	y := x.Right
+	if x.Parent != nil {
+		if x.Parent.Left == x {
+			x.Parent.Left = y
 		} else {
-			t.Parent.Right = y
+			x.Parent.Right = y
 		}
 	} else {
-		rbt.Root = y
+		t.Root = y
 	}
-	y.Parent = t.Parent
-	t.Parent = y
-	t.Right = y.Left
-	y.Left = t
+	y.Parent = x.Parent
+	x.Parent = y
+	x.Right = y.Left
+	if y.Left != nil {
+		y.Left.Parent = x
+	}
+	y.Left = x
 	return
 }
 
-func (t *RbNode) rightRotate(rbt *RbTree) {
-	if t.Left == nil {
+func (t *RbTree) rightRotate(x *RbNode) {
+	if x.Left == nil {
 		return
 	}
-	y := t.Left
-	if t.Parent != nil {
-		if t.Parent.Left != nil && t.Parent.Left.Value.GetID() == t.Value.GetID() {
-			t.Parent.Left = y
+	y := x.Left
+	if x.Parent != nil {
+		if x.Parent.Right == x {
+			x.Parent.Right = y
 		} else {
-			t.Parent.Right = y
+			x.Parent.Left = y
 		}
 	} else {
-		rbt.Root = y
+		t.Root = y
 	}
-	y.Parent = t.Parent
-	t.Parent = y
-	t.Left = y.Right
-	y.Right = t
+	y.Parent = x.Parent
+	x.Parent = y
+	x.Left = y.Right
+	if y.Right != nil {
+		y.Right.Parent = x
+	}
+	y.Right = x
 	return
 }
 
 func (t *RbNode) uncle() (bool, *RbNode) {
 	// 父节点是红色，肯定存在祖父节点
-	if t.Parent.Parent.Left != nil &&
-		t.Parent.Parent.Left.Value.GetID() == t.Parent.Value.GetID() {
+	if t.Parent.Parent.Left == t.Parent {
 		return true, t.Parent.Parent.Right
 	} else {
 		return false, t.Parent.Parent.Left
@@ -89,6 +96,14 @@ func (t *RbTree) depth(node *RbNode, count int, depth *int) {
 }
 
 func (t *RbTree) Search(id int) (result RbValue) {
+	node := t.search(id)
+	if node != nil {
+		return node.Value
+	}
+	return nil
+}
+
+func (t *RbTree) search(id int) (n *RbNode) {
 	node := t.Root
 	for {
 		if node == nil {
@@ -99,7 +114,7 @@ func (t *RbTree) Search(id int) (result RbValue) {
 		} else if id < node.Value.GetID() {
 			node = node.Left
 		} else {
-			return node.Value
+			return node
 		}
 	}
 }
@@ -118,72 +133,6 @@ func (t *RbTree) list(node *RbNode, result *[]RbValue) {
 	*result = append(*result, node.Value)
 	t.list(node.Right, result)
 	return
-}
-
-func (t *RbTree) Check() bool {
-	// 根节点
-	if !t.Root.IsBlack {
-		return false
-	}
-	// 颜色
-	if !t.check(t.Root, t.Root.IsBlack) {
-		return false
-	}
-	// 查重
-	var m = make(map[int]struct{})
-	for _, v := range t.List() {
-		if _, ok := m[v.GetID()]; ok {
-			return false
-		}
-		m[v.GetID()] = struct{}{}
-	}
-	return true
-}
-
-func (t *RbTree) check(node *RbNode, isBlack bool) bool {
-	// 红色是否相连
-	if node.Left != nil {
-		if !isBlack && !node.Left.IsBlack {
-			return false
-		}
-		if !t.check(node.Left, node.Left.IsBlack) {
-			return false
-		}
-	}
-	if node.Right != nil {
-		if !isBlack && !node.Right.IsBlack {
-			return false
-		}
-		if !t.check(node.Right, node.Right.IsBlack) {
-			return false
-		}
-	}
-	// 左右子节点黑色是否相同
-	l, r := 0, 0
-	t.checkLeft(node, &l)
-	t.checkRight(node, &r)
-	if l != r {
-		return false
-	}
-	return true
-}
-
-func (t *RbTree) checkLeft(node *RbNode, count *int) {
-	if node.Left != nil {
-		if node.Left.IsBlack {
-			*count++
-		}
-		t.checkLeft(node.Left, count)
-	}
-}
-
-func (t *RbTree) checkRight(node *RbNode, count *int) {
-	if node.Right != nil {
-		if node.Right.IsBlack {
-			*count++
-		}
-		t.checkRight(node.Right, count)
-	}
 }
 
 func (t *RbTree) Insert(value RbValue) {
@@ -232,30 +181,256 @@ func (t *RbTree) Insert(value RbValue) {
 				// 叔叔节点是黑色
 				if parentIsLeftNode {
 					// 父节点是左节点
-					if node.Parent.Right != nil &&
-						node.Value.GetID() == node.Parent.Right.Value.GetID() {
+					if node.Parent.Right == node {
 						// 当前节点是右节点
 						// 将父节点当作当前节点，然后左旋
 						node = node.Parent
-						node.leftRotate(t)
+						t.leftRotate(node)
 					}
 					node.Parent.IsBlack = true
 					node.Parent.Parent.IsBlack = false
-					node.Parent.Parent.rightRotate(t)
+					t.rightRotate(node.Parent.Parent)
 				} else {
 					// 父节点是右节点
-					if node.Parent.Left != nil &&
-						node.Value.GetID() == node.Parent.Left.Value.GetID() {
+					if node.Parent.Left == node {
 						node = node.Parent
-						node.rightRotate(t)
+						t.rightRotate(node)
 					}
 					node.Parent.IsBlack = true
 					node.Parent.Parent.IsBlack = false
-					node.Parent.Parent.leftRotate(t)
+					t.leftRotate(node.Parent.Parent)
 				}
 			}
 		}
 	}
 	t.Root.IsBlack = true
 	t.count++
+}
+
+func (t *RbTree) min(x *RbNode) *RbNode {
+	if x == nil {
+		return nil
+	}
+	for x.Left != nil {
+		x = x.Left
+	}
+	return x
+}
+
+func (t *RbTree) max(x *RbNode) *RbNode {
+	if x == nil {
+		return nil
+	}
+	for x.Right != nil {
+		x = x.Right
+	}
+	return x
+}
+
+func (t *RbTree) successor(x *RbNode) *RbNode {
+	if x == nil {
+		return nil
+	}
+	if x.Right != nil {
+		return t.min(x.Right)
+	}
+	y := x.Parent
+	for y != nil && x == y.Right {
+		x = y
+		y = y.Parent
+	}
+	return y
+}
+
+func (t *RbTree) Remove(id int) {
+	z := t.search(id)
+	if z == nil {
+		return
+	}
+	var x, y *RbNode
+	if z.Left == nil || z.Right == nil {
+		// 没有子节点或者有一个子节点
+		y = z
+	} else {
+		// 两个子节点都不为空，需要找到后继节点赋值给y
+		// 在"被删除节点"有两个非空子节点的情况下，它的后继节点不可能是双子非空
+		y = t.successor(z)
+	}
+	if y.Left != nil {
+		x = y.Left
+	} else {
+		x = y.Right
+	}
+	// y没有子节点时，x为nil
+	if x != nil {
+		x.Parent = y.Parent
+	}
+	xIsLeft := true
+	if y.Parent == nil {
+		t.Root = x
+	} else if y == y.Parent.Left {
+		y.Parent.Left = x
+	} else {
+		y.Parent.Right = x
+		xIsLeft = false
+	}
+	if y != z {
+		z.Value = y.Value
+	}
+	if y.IsBlack {
+		t.deleteFixup(x, y.Parent, xIsLeft)
+	}
+	t.count--
+}
+
+func (t *RbTree) deleteFixup(x, xp *RbNode, xIsLeft bool) {
+	// x黑色
+	for x != t.Root && (x == nil || x.IsBlack) {
+		if xIsLeft {
+			// x是左孩子
+			w := xp.Right
+			if !w.IsBlack {
+				w.IsBlack = true
+				xp.IsBlack = false
+				t.leftRotate(xp)
+				w = xp.Right
+			}
+			if (w.Left == nil || w.Left.IsBlack) &&
+				(w.Right == nil || w.Right.IsBlack) {
+				w.IsBlack = false
+				x = xp
+				xp = x.Parent
+				if x == x.Parent.Left {
+					xIsLeft = true
+				} else {
+					xIsLeft = false
+				}
+			} else {
+				if w.Right == nil || w.Right.IsBlack {
+					w.Left.IsBlack = true
+					w.IsBlack = false
+					t.rightRotate(w)
+					w = xp.Right
+				}
+				w.IsBlack = xp.IsBlack
+				xp.IsBlack = true
+				w.Right.IsBlack = true
+				t.leftRotate(xp)
+				x = t.Root
+			}
+		} else {
+			w := xp.Left
+			if w != nil && !w.IsBlack {
+				w.IsBlack = true
+				xp.IsBlack = false
+				t.rightRotate(xp)
+				w = xp.Left
+			}
+			if (w.Left == nil || w.Left.IsBlack) &&
+				(w.Right == nil || w.Right.IsBlack) {
+				w.IsBlack = false
+				x = xp
+				xp = x.Parent
+				if x == x.Parent.Left {
+					xIsLeft = true
+				} else {
+					xIsLeft = false
+				}
+			} else {
+				if w.Left == nil || w.Left.IsBlack {
+					w.Right.IsBlack = true
+					w.IsBlack = false
+					t.leftRotate(w)
+					w = xp.Left
+				}
+				w.IsBlack = xp.IsBlack
+				xp.IsBlack = true
+				w.Left.IsBlack = true
+				t.rightRotate(xp)
+				x = t.Root
+			}
+		}
+	}
+	x.IsBlack = true
+}
+
+// all-树中所有数据的集合
+func Check(t RbTree, all map[int]struct{}) error {
+	// 根节点
+	if !t.Root.IsBlack {
+		return fmt.Errorf("root red")
+	}
+	// 颜色
+	err := check(t.Root)
+	if err != nil {
+		return err
+	}
+	var treeAll = make(map[int]struct{})
+	for _, v := range t.List() {
+		id := v.GetID()
+		// 查重
+		if _, ok := treeAll[id]; ok {
+			return fmt.Errorf("id repeat %d", id)
+		}
+		treeAll[id] = struct{}{}
+		// 多余数据
+		if _, ok := all[id]; !ok {
+			return fmt.Errorf("id not exit %d", id)
+		}
+	}
+	// 数据丢失
+	for id := range all {
+		if _, ok := treeAll[id]; !ok {
+			return fmt.Errorf("id lost %d", id)
+		}
+	}
+	return nil
+}
+
+func check(node *RbNode) error {
+	// 红色是否相连
+	if node.Left != nil {
+		if !node.IsBlack && !node.Left.IsBlack {
+			return fmt.Errorf("red connect %d", node.Value.GetID())
+		}
+		err := check(node.Left)
+		if err != nil {
+			return err
+		}
+	}
+	if node.Right != nil {
+		if !node.IsBlack && !node.Right.IsBlack {
+			return fmt.Errorf("red connect %d", node.Value.GetID())
+		}
+		err := check(node.Right)
+		if err != nil {
+			return err
+		}
+	}
+	// 左右子节点黑色是否相同
+	l, r := 0, 0
+	checkLeft(node, &l)
+	checkRight(node, &r)
+	if l != r {
+		return fmt.Errorf("black not balance Left:%d Right：%d", l, r)
+	}
+	return nil
+}
+
+func checkLeft(node *RbNode, count *int) {
+	if node.Left != nil {
+		if node.Left.IsBlack {
+			*count++
+		}
+		checkLeft(node.Left, count)
+	}
+}
+
+func checkRight(node *RbNode, count *int) {
+	if node.Right != nil {
+		if node.Right.IsBlack {
+			*count++
+		}
+		checkRight(node.Right, count)
+	}
 }
