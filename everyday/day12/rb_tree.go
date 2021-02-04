@@ -278,16 +278,15 @@ func (t *RbTree) Remove(id int) {
 		z.Value = y.Value
 	}
 	if y.IsBlack {
+		// x有可能为空时，x的父节点通过y拿，fix方法内无法判断x是左右子节点
 		t.deleteFixup(x, y.Parent, xIsLeft)
 	}
 	t.count--
 }
 
 func (t *RbTree) deleteFixup(x, xp *RbNode, xIsLeft bool) {
-	// x黑色
 	for x != t.Root && (x == nil || x.IsBlack) {
 		if xIsLeft {
-			// x是左孩子
 			w := xp.Right
 			if !w.IsBlack {
 				w.IsBlack = true
@@ -299,11 +298,13 @@ func (t *RbTree) deleteFixup(x, xp *RbNode, xIsLeft bool) {
 				(w.Right == nil || w.Right.IsBlack) {
 				w.IsBlack = false
 				x = xp
-				xp = x.Parent
-				if x == x.Parent.Left {
-					xIsLeft = true
-				} else {
-					xIsLeft = false
+				if x != nil && x.Parent != nil {
+					xp = x.Parent
+					if x == xp.Left {
+						xIsLeft = true
+					} else {
+						xIsLeft = false
+					}
 				}
 			} else {
 				if w.Right == nil || w.Right.IsBlack {
@@ -330,11 +331,13 @@ func (t *RbTree) deleteFixup(x, xp *RbNode, xIsLeft bool) {
 				(w.Right == nil || w.Right.IsBlack) {
 				w.IsBlack = false
 				x = xp
-				xp = x.Parent
-				if x == x.Parent.Left {
-					xIsLeft = true
-				} else {
-					xIsLeft = false
+				if x != nil && x.Parent != nil {
+					xp = x.Parent
+					if x == xp.Left {
+						xIsLeft = true
+					} else {
+						xIsLeft = false
+					}
 				}
 			} else {
 				if w.Left == nil || w.Left.IsBlack {
@@ -351,10 +354,12 @@ func (t *RbTree) deleteFixup(x, xp *RbNode, xIsLeft bool) {
 			}
 		}
 	}
-	x.IsBlack = true
+	if x != nil {
+		x.IsBlack = true
+	}
 }
 
-// all-树中所有数据的集合
+// all-所有插入删除操作后，树中应该有的数据的集合
 func Check(t RbTree, all map[int]struct{}) error {
 	// 根节点
 	if !t.Root.IsBlack {
