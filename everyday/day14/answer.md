@@ -97,7 +97,7 @@ mysql> select * from user;
 
 id 是主键，所以是聚簇索引，其叶子节点存储的是对应行记录的数据。
 
-![trie-tree](https://brt-1303999354.cos.ap-shanghai.myqcloud.com/QQ%E6%88%AA%E5%9B%BE20210212221635.png)
+![](https://brt-1303999354.cos.ap-shanghai.myqcloud.com/QQ%E6%88%AA%E5%9B%BE20210212221635.png)
 
 ### 3.3 通过聚簇索引进行查询
 

@@ -1,1 +1,1 @@
-# 谈论一下你对mysql redolog的理解？
+# 谈论一下你对mysql redo log的理解？
