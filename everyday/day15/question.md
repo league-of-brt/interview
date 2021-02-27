@@ -1,1 +1,0 @@
-# 谈论一下你对mysql redo log的理解？

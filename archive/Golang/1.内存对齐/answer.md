@@ -1,13 +1,15 @@
-
 CPU是按块从内存读取数据，不同的操作系统，数据块的大小不一样。  
 当一份数据刚好处在数据块边界，会给cpu增加额外的操作。  
+
 ````
 |----xxxx|xxxx----| // 需要两次读取内存才能拿到完整的数据
 ````
+
 golang自动帮我们进行了内存对齐，64位golang将每8字节看作一个内存块，根据结构体的字段长度给结构体分配内存空间。  
 但是内存对齐是一种使用空间换时间的做法，字段的类型和顺序会影响到内存的大小。
 
 ### 例如：
+
 ```
 	var x struct {
 		a bool
@@ -49,7 +51,9 @@ golang自动帮我们进行了内存对齐，64位golang将每8字节看作一�
 	fmt.Println(unsafe.Offsetof(y.b))
 	fmt.Println(unsafe.Offsetof(y.c))
 ```
+
 ### 输出：
+
 ```
 SIZE
 16
@@ -79,15 +83,18 @@ Offsetof
 16
 8
 ```
+
 unsafe.Sizeof函数返回操作数在内存中的字节大小。  
 unsafe.Alignof 函数返回对应参数的类型需要对齐的倍数。  
 unsafe.Offsetof函数的参数必须是一个字段 x.f, 然后返回 f 字段相对于 x 起始地址的偏移量, 包括可能的空洞。  
 
 内存情况：  
+
 ```
 x: |x---xxxx|xxxxxxxx|
 y: |x-------|xxxxxxxx|xxxx----|
 ```
+
 可以看出y比x多了8位。
 
 ### 优化：

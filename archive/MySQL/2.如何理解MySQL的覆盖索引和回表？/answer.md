@@ -1,4 +1,4 @@
-# 如何理解mysql的覆盖索引和回表？
+# 如何理解MySQL的覆盖索引和回表？
 
 参考：https://zhuanlan.zhihu.com/p/107125866
 
