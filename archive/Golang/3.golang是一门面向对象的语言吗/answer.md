@@ -1,5 +1,10 @@
 # golang是面向对象的语言吗？
 
+* [golang是面向对象的语言吗？](#golang是面向对象的语言吗)
+  * [1 Yes and No](#1-yes-and-no)
+  * [2 官方说法](#2-官方说法)
+  * [3 深入理解](#3-深入理解)
+
 参考：https://www.zhihu.com/question/315995798/answer/630360043
 
 Java有三大面向对象核心特征：
