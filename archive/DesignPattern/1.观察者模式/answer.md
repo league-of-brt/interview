@@ -117,8 +117,7 @@ package article
 import "sync"
 
 var (
-	obs      *observer
-	obsMutex sync.Mutex
+	obs observer
 )
 
 type observer struct {
@@ -127,28 +126,17 @@ type observer struct {
 
 // GetObs ...
 func GetObs() *observer {
-	obsMutex.Lock()
-	if obs == nil {
-		obs = &observer{
-			ProcessorMap: sync.Map{},
-		}
-	}
-	obsMutex.Unlock()
-	return obs
+	return &obs
 }
 
 // AddProcessor ...
 func (o *observer) AddProcessor(p processor) {
-	obsMutex.Lock()
 	o.ProcessorMap.Store(p.GetID(), p)
-	obsMutex.Unlock()
 }
 
 // DeleteProcessor ...
 func (o *observer) DeleteProcessor(id int64) {
-	obsMutex.Lock()
 	o.ProcessorMap.Delete(id)
-	obsMutex.Unlock()
 }
 
 // PostEvent ...
@@ -274,8 +262,7 @@ import (
 )
 
 var (
-	obs      *observer
-	obsMutex sync.Mutex
+	obs observer
 )
 
 type observer struct {
@@ -284,19 +271,11 @@ type observer struct {
 
 // GetObs ...
 func GetObs() *observer {
-	obsMutex.Lock()
-	if obs == nil {
-		obs = &observer{
-			ProcessorMap: sync.Map{},
-		}
-	}
-	obsMutex.Unlock()
-	return obs
+	return &obs
 }
 
 // AddProcessor ...
 func (o *observer) AddProcessor(p processor) {
-	obsMutex.Lock()
 	v, ok := o.ProcessorMap.Load(p.GetType())
 	if ok {
 		pList := v.([]processor)
@@ -305,14 +284,11 @@ func (o *observer) AddProcessor(p processor) {
 	} else {
 		o.ProcessorMap.Store(p.GetType(), []processor{p})
 	}
-	obsMutex.Unlock()
 }
 
 // DeleteProcessorByType ...
 func (o *observer) DeleteProcessorByType(t int) {
-	obsMutex.Lock()
 	o.ProcessorMap.Delete(t)
-	obsMutex.Unlock()
 }
 
 // PostEvent ...
