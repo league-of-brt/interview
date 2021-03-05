@@ -72,7 +72,7 @@ LRU也有很多种实现方法，最主要的区别的是淘汰数据的策略�
 
 ## 3 简单实现
 
-见：
+基本实现：https://github.com/xie4ever/practice/tree/master/golang/leetcode/lru/example1
 
 可以根据2的图解先自己实现一个，我实现的初版如下：
 
@@ -290,5 +290,5 @@ https://redis.io/topics/lru-cache
 然后可以看一下这个：
 http://haoran.tech/2018/07/19/4-Redis%E8%BF%87%E6%9C%9F%E7%AD%96%E7%95%A5-%E6%89%8B%E5%86%99LRU/
 
-（我觉得这个问题需要大家讨论一下。）
+（我觉得这个问题需要大家讨论一下）
 
