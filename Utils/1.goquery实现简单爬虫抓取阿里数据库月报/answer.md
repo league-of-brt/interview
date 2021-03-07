@@ -5,6 +5,7 @@
   * [2 抓取单个网页，解析内容，打印](#2-抓取单个网页解析内容打印)
   * [3 批量抓取多个网页，解析内容，打印](#3-批量抓取多个网页解析内容打印)
   * [4 批量抓取多个网页，解析内容，输出到 README\.md](#4-批量抓取多个网页解析内容输出到-readmemd)
+  * [5 一些实现细节](#5-一些实现细节)
 
 github：https://github.com/xie4ever/practice/tree/master/golang/crawler
 
