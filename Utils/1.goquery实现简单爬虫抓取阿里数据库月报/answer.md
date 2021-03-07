@@ -420,3 +420,12 @@ func getTitle(str string) string {
 	return fmt.Sprintf("%s%s", prefix, suffix)
 }
 ```
+
+## 5 一些实现细节
+
+* 主要麻烦点在于提取你想要的内容，怎么找到元素，怎么处理字符串。
+* goquery找元素有很多方式，不限于`a:contains(·)`，而且效率也有差距，需要选合适的方式。
+* range map是无序的，这是map的内部结构、扩容机制决定的，如果要顺序输出，你得额外维护一个list。
+* 注意时间间隔，如果太快或者开多线程会被nginx拦截，我使用`time.Sleep(2 * time.Second)`。
+* 更好的处理方式是多IP，开多线程出抓不同月份的文章，因为这次抓得文章不多所以不用开多线程。
+* 为什么不去抓`http://mysql.taobao.org//monthly/2014/09/01/`这样的文章页面，而要抓`http://mysql.taobao.org//monthly/2014/09/`这样的目录页面，前者不是更简单吗？解析也简单。主要考虑目录和文章不是一个量级，网络IO耗时，需要尽量减少请求次数。
