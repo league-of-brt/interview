@@ -99,25 +99,42 @@
 
 可以看到，表结构和数据是聚合的，以Json的形式体现。这种天生的结构和内容聚合在一起的数据，当然是存在一起。
 
-### 5.2 数据库类型，决定了其使用方式
+### 5.2 MySQL和MongoDB的数据库类型（设计方式），决定了其使用方式
 
 现在我们有个需求：
 
-> 查询一个姓名为Tom的客户的所有订单。
+> 查询姓名为Tom的客户，有多少订单。
 
-对于关系型数据库，那当然用JOIN来体现关系了：
+对于MySQL，直接IN：
 
 ```sql
-SELECT * from order AS o 
-LEFT JOIN (
-    SELECT id FROM customer WHERE name = 'Tom'
-) AS t ON o.customer_id = t.id
-WHERE t.id IS NOT NULL
+SELECT 
+  * 
+from 
+  order 
+WHERE 
+  customer_id IN (
+    SELECT 
+      id 
+    FROM 
+      customer 
+    WHERE 
+      name = 'Tom'
+  );
 ```
 
-假设我们的name和customer_id字段都有索引，那么使用B+树的结构，就能一次性找到所有名叫Tom的顾客，拿到id之后，再一次性拿到所有订单。这里的name和customer_id显然都是起了指针的作用（用于找到实际数据），就很适合使用B+树。
+或者拆开来处理，在程序中做IN操作：
 
-但是对于非关系型数据库，就是这样的一个Json：
+```sql
+SELECT id FROM customer WHERE name = 'Tom';
+SELECT * from order WHERE customer_id IN (customer_ids);
+```
+
+假设name和customer_id字段都有索引，首先通过name非聚簇索引找到所有名叫Tom的顾客的id，再通过customer_id非聚簇索引一次性拿到所有订单的id，再通过聚簇索引拿到所有订单记录。
+
+这里的name和customer_id显然都是起了指针的作用（用于找到实际数据），这就类似B+树的搜索过程，一路通过指针向下寻找，直至找到叶子节点。所以就很适合使用B+树。
+
+但是对于聚合型数据库，存的数据就是这样的一个Json：
 
 ```json
 //customer
@@ -132,6 +149,24 @@ WHERE t.id IS NOT NULL
 }
 ```
 
-对于这种数据，直接执行`db.customer.find({name:'Tom'})`，订单信息就全出来了。反正就是利用索引name，找到指针，值就能读出来，这种单一查询的功能就很适合使用B树。
+如果我们要找订单信息，直接执行`db.customer.find({name:'Tom'})`，订单信息就全出来了。
 
-这就是MongoDB要使用B树的原因。
+这种数据都是一个整体，不需要我们去组织数据之间的关系（因为在设计之初就组织好了，所有数据都在一起）。
+
+利用索引name，通过指针，马上就可以把数据读出来，这种单一查询的功能就很适合使用B树。
+
+### 5.3 MySQL和MongoDB的关注点不同，决定了其使用方式
+
+MongoDB和MySQL虽然选择了不同的数据结构，但是最终目的就是减少查询需要的随机IO次数。
+
+区别在于：
+1. MySQL认为遍历数据的查询是常见的。
+2. MongoDB认为查询单个数据记录远比遍历数据更加常见。
+
+举个例子，MySQL经常有这样的使用场景：
+
+```sql
+SELECT id FROM customer WHERE name = 'Tom';
+SELECT * from order WHERE customer_id IN (customer_ids);
+SELECT * from order_item WHERE order_id IN (order_ids) AND price > 100;
+```
