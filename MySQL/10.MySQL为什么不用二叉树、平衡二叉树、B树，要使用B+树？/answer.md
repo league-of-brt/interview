@@ -139,13 +139,16 @@ SELECT * from order WHERE customer_id IN (customer_ids);
 ```json
 //customer
 {
-	"id": 1,
-	"name": "Tom",
-	"order_list": [{
-		"id": 99
-	}, {
-		"id": 100
-	}]
+    "id":1,
+    "name":"Tom",
+    "order_list":[
+        {
+            "id":99
+        },
+        {
+            "id":100
+        }
+    ]
 }
 ```
 
@@ -163,10 +166,56 @@ MongoDB和MySQL虽然选择了不同的数据结构，但是最终目的就是�
 1. MySQL认为遍历数据的查询是常见的。
 2. MongoDB认为查询单个数据记录远比遍历数据更加常见。
 
-举个例子，MySQL经常有这样的使用场景：
+现在我们有个需求：
+
+> 查询姓名为Tom的客户的所有订单中，金额大于100的商品。
+
+适合MySQL的查询，查一个范围：
 
 ```sql
 SELECT id FROM customer WHERE name = 'Tom';
 SELECT * from order WHERE customer_id IN (customer_ids);
 SELECT * from order_item WHERE order_id IN (order_ids) AND price > 100;
 ```
+
+这里就是一个典型的范围查询了。但是这种场景在mongoDB的表现就会很差，虽然也可以查，但是不适合做这样的范围查询。
+
+适合MongoDB的查询，直接查用户信息：
+
+```json
+//customer
+{
+    "id":1,
+    "name":"Tom",
+    "order_list":[
+        {
+            "id":99,
+            "order_item_list":[
+                {
+                    "id":1,
+                    "price":99
+                },
+                {
+                    "id":2,
+                    "price":100
+                }
+            ]
+        },
+        {
+            "id":100,
+            "order_item_list":[
+                {
+                    "id":1,
+                    "price":99
+                }
+            ]
+        }
+    ]
+}
+```
+
+拿到用户的所有订单信息，再去程序中做筛选。
+
+现在我们确定了使用方式，就可以找合适的数据结构：
+1. MySQL要支持范围查询，使用B+树可以减少IO次数。
+2. MongoDB倾向于单独查询，使用B树性能更好。
