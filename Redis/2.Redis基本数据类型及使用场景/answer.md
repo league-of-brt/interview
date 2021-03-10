@@ -292,19 +292,20 @@ OK
 1) "{table_id:1,meal_id:2,meal_num:3}"
 2) "{table_id:2,meal_id:3,meal_num:4}"
 3) "{table_id:1,meal_id:2,meal_num:1}"
-127.0.0.1:6379> rpop cook:id:1 # 这里需要注意，rpop弹出元素，并不会删除
-"{table_id:1,meal_id:2,meal_num:1}"
-127.0.0.1:6379> lrem cook:id:1 0 {table_id:1,meal_id:2,meal_num:1} # 取消订单
-(integer) 0
+127.0.0.1:6379> lpop cook:id:1 # 初始做菜，从左边弹出第一个菜
+"{table_id:1,meal_id:2,meal_num:3}"
 127.0.0.1:6379> lrange cook:id:1 0 -1
-1) "{table_id:1,meal_id:2,meal_num:3}"
-2) "{table_id:2,meal_id:3,meal_num:4}"
-127.0.0.1:6379> rpush cook:id:1 {table_id:3,meal_id:4,meal_num:5} # 追加订单
-(integer) 3
+1) "{table_id:2,meal_id:3,meal_num:4}"
+2) "{table_id:1,meal_id:2,meal_num:1}"
+127.0.0.1:6379> lrem cook:id:1 0 {table_id:1,meal_id:2,meal_num:1} # 用户取消订单
+(integer) 1
 127.0.0.1:6379> lrange cook:id:1 0 -1
-1) "{table_id:1,meal_id:2,meal_num:3}"
-2) "{table_id:2,meal_id:3,meal_num:4}"
-3) "{table_id:3,meal_id:4,meal_num:5}"
+1) "{table_id:2,meal_id:3,meal_num:4}"
+127.0.0.1:6379> rpush cook:id:1 {table_id:3,meal_id:4,meal_num:5} # 用户追加订单
+(integer) 2
+127.0.0.1:6379> lrange cook:id:1 0 -1
+1) "{table_id:2,meal_id:3,meal_num:4}"
+2) "{table_id:3,meal_id:4,meal_num:5}"
 ```
 
 ## 4 set
