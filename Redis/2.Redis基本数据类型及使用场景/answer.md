@@ -191,7 +191,10 @@ OK
 > 2. 客户端1从GC pause中恢复过来之后，依然是向存储服务发送访问请求，但是带了fencing token = 33。
 > 3. 存储服务发现它之前已经处理过34的请求，所以会拒绝掉这次33的请求，这样就避免了冲突。
 
-请注意，只靠客户端自己检查锁状态是不够的，这种机制**要求资源本身参与检查所持fencing token信息**，如果发现已经处理过更高版本的fencing token，要拒绝持有低版本fencing token的写请求。
+这就有两个实现细节：
+
+1. 锁服务提供自增的fencing token（比如zookeeper可以用事务标识zxid或节点版本cversion来充当fencing token）。
+2. 只靠客户端自己检查锁状态是不够的，这个方案**要求资源本身参与检查所持fencing token信息**，如果发现已经处理过更高版本的fencing token，要拒绝持有低版本fencing token的写请求。
 
 举个例子，数据库资源，比如MySQL，可以做一个乐观锁。或者同时写一个文件，需要文件携带版本号。
 
