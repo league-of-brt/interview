@@ -148,8 +148,162 @@ var str = "test"
 
 ![pic](https://brt-1303999354.cos.ap-shanghai.myqcloud.com/QQ%E6%88%AA%E5%9B%BE20210312162828.png)
 
-## 4 扩容机制
+## 4 共用底层数组
 
-## 5 计算机如何分配内存
+研究一下底层数组，如果定义一个int slice，那么底层数组就是一个int array。如果定义一个string slice，那么底层数组就是一个string array。
+
+```golang
+// Test5 ...
+func Test5(t *testing.T) {
+	array := [10]int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	s1 := array[1:3]
+	s2 := array[5:9]
+	fmt.Println(s1)      // [1 2]
+	fmt.Println(len(s1)) // 2
+	fmt.Println(cap(s1)) // 9
+	fmt.Println(s2)      // [5 6 7 8]
+	fmt.Println(len(s2)) // 4
+	fmt.Println(cap(s2)) // 5
+}
+```
+
+|var|array|len|cap|
+|----|----|----|----|
+|s1|[1,2,0,0,0,0,0,0,0]|2|9|
+|s2|[5,6,7,8,0]|4|5|
+
+这里大家可能会奇怪，为啥s1中只有2个元素，但是cap是9？
+
+这是因为s1的cap来自array，从array的元素1开始，直到array的结尾，共有9位。画张图大家就明白了：
+
+![pic](https://brt-1303999354.cos.ap-shanghai.myqcloud.com/QQ%E6%88%AA%E5%9B%BE20210312231334.png)
+
+s1、s2已经指明共用array作为底层数组了，如果array中的元素改变，s1、s2中的元素也会跟着变：
+
+```golang
+// Test5 ...
+func Test5(t *testing.T) {
+	array := [10]int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	s1 := array[1:3]
+	s2 := array[5:9]
+	fmt.Println(s1)      // [1 2]
+	fmt.Println(len(s1)) // 2
+	fmt.Println(cap(s1)) // 9
+	fmt.Println(s2)      // [5 6 7 8]
+	fmt.Println(len(s2)) // 4
+	fmt.Println(cap(s2)) // 5
+
+	array[2] = 3
+	fmt.Println(s1)      // [1 3] 我变了！
+}
+```
+
+如果此时s2增加了两个元素，发生了扩容，那么一切就不一样了：
+
+```golang
+// Test5 ...
+func Test5(t *testing.T) {
+	array := [10]int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	s1 := array[1:3]
+	s2 := array[5:9]
+	fmt.Println(s1)      // [1 2]
+	fmt.Println(len(s1)) // 2
+	fmt.Println(cap(s1)) // 9
+	fmt.Println(s2)      // [5 6 7 8]
+	fmt.Println(len(s2)) // 4
+	fmt.Println(cap(s2)) // 5
+
+	s2 = append(s2, 9, 10)
+	fmt.Println(len(s2)) // 6
+	fmt.Println(cap(s2)) // 10
+
+	array[5] = 1    // 尝试修改array，看看s2的底层数组会不会改变
+	fmt.Println(s2) // [5 6 7 8 9 10]
+}
+```
+
+1. `s2 = append(s2, 9, 10)` 时，发现已经超出cap，发生扩容操作。
+2. 重新申请一块内存，copy原来的元素5、6、7、8，插入9、10。
+
+现在内存示意图就会变成这样：
+
+![pic](https://brt-1303999354.cos.ap-shanghai.myqcloud.com/QQ%E6%88%AA%E5%9B%BE20210312232753.png)
+
+所以现在s2的底层数组已经不是array了，改变array的元素不会导致s2的元素改变。
+
+## 5 扩容机制
+
+需要注意这三点：
+
+扩容步骤：
+1. 预测扩容后容量（根据预估规则计算newCap）
+2. 计算需要多大的内存（类型*容量）
+3. 申请内存（匹配到合适的内存规格）
+
+### 5.1 预估规则
+
+1. if oldCap * 2 < cap, newCap = cap
+2. if oldCap * 2 >= cap：
+    1. oldLen < 1024, newCap >= oldCap * 2
+    2. oldLen > 1024, newCap >= oldCap * 1.25
+
+现在网上有很多资料认为 
+
+1. `oldLen < 1024, newCap = oldCap * 2`
+2. `oldLen > 1024, newCap = oldCap * 1.25`
+
+但是这篇文章否认了这一观点：https://www.bookstack.cn/read/qcrao-Go-Questions/%E6%95%B0%E7%BB%84%E5%92%8C%E5%88%87%E7%89%87-%E5%88%87%E7%89%87%E7%9A%84%E5%AE%B9%E9%87%8F%E6%98%AF%E6%80%8E%E6%A0%B7%E5%A2%9E%E9%95%BF%E7%9A%84.md
+
+结论是计算完 `newCap = oldCap * 1.25/2` 之后，根据内存分配策略，还会对newcap做一个内存对齐，进行内存对齐之后，newCap会**大于等于**oldCap的1.25倍或者两倍。
+
+### 5.2 需要多大的内存
+
+newCap个元素需要多大的内存，要怎么计算呢？
+
+难道是简单的：newCap * 元素大小吗？比如我一个int占8个字节，扩容到5，就申请8*5 = 40个字节的内存吗？
+
+原则上是这样的，我们只需要40个字节就能完成扩容操作，现在我们需要进行申请。
+
+答案是否定的。
+
+### 5.3 申请内存
+
+在Golang中，想要申请内存，并不是直接和操作系统交涉的，并不是你向操作系统要40字节，它就会给你。为什么？程序向操作系统申请内存，是要经过用户态到内核态的转换的，大家想想，如果能随便向操作系统要内存，就会导致用户态和内核态的频繁转换，非常消耗性能。
+
+#### 5.3.1 内存管理模块
+
+解决思路：临时向操作系统申请内存开销大，我们能不能整个“内存池”，预先一次性向操作系统申请一批内存过来，放在“内存池”里面，用的时候就直接取，那不就不需要临时申请内存了？
+
+那么，这个内存池又该由谁去维护呢？操作系统？虚拟机？我们自己写程序？
+
+那当然是虚拟机帮我们做这个功能了，在Golang中，有个内存管理模块，他会提前向操作系统申请一批内存。我们的程序如果要内存，得向这个内存管理模块申请，不能向操作系统申请。
+
+#### 5.3.2 匹配到合适的内存规格
+
+内存管理模块会提前向操作系统申请一批内存，然后把这些内存分为常用的规格管理起来，比如8字节、16字节、32字节、48字节......
+
+我们申请内存时，内存管理模块会帮我们匹配足够大并且最接近的规格。比如我们申请40字节，就会匹配到48字节的内存块，我们实际上拿到的是48字节，能装下6个int，是超过我们的扩容需要的。
 
 ## 6 扩容例子
+
+```golang
+a := []string{"My", "name", "is"}
+a = append(a, "eggo")
+```
+
+1. 调用append方法，发现数据量大于cap。开始扩容。
+2. 计算newCap:
+    1. 现在oldCap = 3, len = 3
+    2. 我们要插入一个元素，需要cap = 4
+    3. 3 x 2 = 6 > 4 && 3 < 1024
+    4. newCap = 3 * 2 = 6
+3. 计算需要多大的内存:
+    1. 6 * 16 Byte（string由指针和长度组成，指针8字节，长度int也为8字节） = 96 Byte
+4. 匹配到合适的内存规格：
+    1. 从小到大逐一匹配，匹配到96字节大小的内存块，申请完成。
+
+接下来的步骤是：
+
+5. 新的内存将作为新的底层数组，将老slice中的数据复制过去。
+6. 将append的元素添加到新的底层数组中。
+7. append方法返回新的slice，新的slice的长度并没有变化，而容量却增大了。
