@@ -107,7 +107,7 @@ Access to fetch at 'https://www.taobao.com/' from origin 'https://www.baidu.com'
 随着互联网的发展，同源策略越来越严格，不仅限于Cookie的读取。目前，如果非同源，共有三种行为受到限制：
 
 1. Cookie、LocalStorage 和 IndexDB 无法读取（防止窃取信息）。
-2. DOM 无法获得（防止篡改页面）。
+2. DOM 无法获得（防止拿到别的页面的信息）。
 3. 请求的响应被拦截。
 
 看到这里你应该明白，为什么1.3的请求会被拦截了，原因就是请求的源和服务端的源不是同源，而服务端又没有设置允许的跨域资源共享，所以请求的响应被浏览器给拦截掉了。
@@ -218,7 +218,7 @@ Content-Type: text/html; charset=utf-8
 
 其中只有Access-Control-Allow-Origin是必须有的，别的都是可选的。
 
-如果能收到，就说明服务器同一跨域请求了，浏览器不再拦截响应的结果。
+如果能收到，就说明服务器同意跨域请求了，浏览器不再拦截响应的结果。
 
 ### 4.4 Access-Control-Allow-Origin = *
 
