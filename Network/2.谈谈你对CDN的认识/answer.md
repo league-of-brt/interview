@@ -30,7 +30,7 @@
 
 域名接入 CDN 开始使用加速服务后，当您的发起 HTTP 请求时，实际的处理流程如下图所示：
 
-![pic](https://brt-1303999354.cos.ap-shanghai.myqcloud.com/image.png)
+![pic](https://brt-1303999354.cos.ap-shanghai.myqcloud.com/cdn.png)
 
 1. 用户向 www.test.com 下的某图片资源（如：1.jpg）发起请求，会先向 Local DNS 发起域名解析请求。
 2. 当 Local DNS 解析 www.test.com 时，会发现已经配置了 CNAME:
