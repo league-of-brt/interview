@@ -33,8 +33,8 @@
 ![pic](https://brt-1303999354.cos.ap-shanghai.myqcloud.com/image.png)
 
 1. 用户向 www.test.com 下的某图片资源（如：1.jpg）发起请求，会先向 Local DNS 发起域名解析请求。
-2. 当 Local DNS 解析 www.test.com时，会发现已经配置了 CNAME:
-www.test.com.cdn.dnsv1.com，然后就会递归查询到运营商提供的DNS服务器，运营商的DNS服务器会为请求分配最佳节点IP。
+2. 当 Local DNS 解析 www.test.com 时，会发现已经配置了 CNAME:
+www.test.com.cdn.dnsv1.com ，然后就会递归查询到运营商提供的DNS服务器，运营商的DNS服务器会为请求分配最佳节点IP。
 3. Local DNS 获取运营商的DNS服务器返回的解析 IP。
 4. 用户获取解析 IP。
 5. 用户向获取的 IP 发起对资源 1.jpg 的访问请求。
