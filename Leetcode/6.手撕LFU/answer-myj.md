@@ -1,4 +1,4 @@
-```
+```golang
 type LFUCacheNode struct {
 	k, v int
 	req  int // req times
