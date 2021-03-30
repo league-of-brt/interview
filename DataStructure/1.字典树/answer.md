@@ -60,7 +60,7 @@
 
 ## 2 白板作图，画出字典树的简单结构
 
-![trie-tree](https://brt-1303999354.cos.ap-shanghai.myqcloud.com/QQ%E6%88%AA%E5%9B%BE20201220152453.png)
+![pic](https://brt-1303999354.cos.ap-shanghai.myqcloud.com/QQ%E6%88%AA%E5%9B%BE20201220152453.png)
 
 ## 3 字典树的简单操作
 
