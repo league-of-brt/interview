@@ -20,7 +20,7 @@
 
 后来的处理器都提供了缓存锁定机制，也就说当某个处理器对缓存中的共享变量进行了操作，其他处理器会有个嗅探机制，将其他处理器的该共享变量的缓存失效。
 
-这里需要看看这篇文章，讲述了 CPU 做了什么：https://cloud.tencent.com/developer/article/1634000
+这里需要看看这篇文章，讲述了 CPU 做了什么：https://yemablog.com/posts/cache-locking
 
 > 当两个 core 同时执行针对同一地址的 CAS 指令时，其实他们是在试图修改每个 core 自己持有的 cache line，假设两个 core 都持有相同地址对应 cache line，且各自 cache line 状态为 S，这时如果要想成功修改，就首先需要把 S 转为 E 或者 M，则需要向其它 core invalidate 这个地址的 cache line，则两个 core 都会向 ring bus 发出 invalidate 这个操作，那么在 ring bus 上就会根据特定的设计协议仲裁是 core0，还是 core1 能赢得这个 invalidate，胜者完成操作，失败者需要接受结果，invalidate 自己对应的 cache line，再读取胜者修改后的值，回到起点。
 
